@@ -14,7 +14,7 @@ py2rs is a desktop application that uses Large Language Models to automatically 
 
 ### Core Features
 - **LLM-Powered Migration** - Uses AI to understand Python code and generate equivalent Rust
-- **300+ Library Mappings** - Comprehensive database of Python → Rust crate equivalents
+- **1000+ Library Mappings** - Comprehensive database of Python → Rust crate equivalents (auto-updated every 3 days)
 - **Automatic Dependency Detection** - Identifies external libraries and suggests Rust crates
 - **Compile Verification** - Checks generated code with `cargo check` and iterates on errors
 - **Smart Context** - Analyzes project structure and maintains consistency across files
