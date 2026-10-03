@@ -1,0 +1,8 @@
+{
+  "first_run": true,
+  "provider": {
+    "kind": "openaicompatible",
+    "base_url": "http://localhost:11434/v1",
+    "model": "qwen2.5-coder"
+  }
+}
