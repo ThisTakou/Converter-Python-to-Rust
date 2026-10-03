@@ -1,0 +1,197 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>py2rs</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<main>
+  <header><h1>py2rs</h1>
+    <div style="display:flex;gap:12px;align-items:center">
+      <button id="historyBtn" title="История миграций">📜</button>
+      <button id="settingsBtn" title="Настройки">⚙️</button>
+      <label><span data-t="lang"></span> <select id="lang"><option value="ru">Русский</option><option value="en">English</option></select></label>
+    </div>
+  </header>
+  <section id="dropZone" style="position:relative">
+    <button id="pick" data-t="pickFolder"></button> <code id="path"></code>
+    <p><span data-t="files"></span>: <b id="count">0</b></p>
+    <div id="dropOverlay" style="display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(59,130,246,0.1);border:2px dashed #3b82f6;border-radius:8px;display:flex;align-items:center;justify-content:center;pointer-events:none">
+      <span style="font-size:24px;font-weight:600;color:#3b82f6">📁 Drop folder here</span>
+    </div>
+    <div id="fileList" style="display:none;margin-top:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <label style="font-weight:600" data-t="fileListTitle"></label>
+        <div style="display:flex;gap:8px">
+          <button id="selectAll" type="button" style="font-size:14px;padding:4px 8px" data-t="selectAll"></button>
+          <button id="deselectAll" type="button" style="font-size:14px;padding:4px 8px" data-t="deselectAll"></button>
+        </div>
+      </div>
+      <div id="fileListContainer" style="max-height:300px;overflow-y:auto;border:1px solid var(--line);border-radius:6px;padding:8px"></div>
+    </div>
+  </section>
+  <section>
+    <label data-t="libsFound"></label>
+    <div id="crates" class="crates"></div>
+  </section>
+  <section>
+    <label data-t="about"></label>
+    <textarea id="desc" rows="3"></textarea>
+  </section>
+  <section class="grid">
+    <div style="display:flex;gap:8px;align-items:center">
+      <label style="flex:1"><span data-t="providerKind"></span>
+        <select id="kind">
+          <option value="openaicompatible" data-t="kindOpenai"></option>
+          <option value="anthropic" data-t="kindAnthropic"></option>
+          <option value="llamacpp" data-t="kindLlamaCpp"></option>
+          <option value="openrouter">OpenRouter</option>
+          <option value="groq">Groq</option>
+          <option value="azure">Azure OpenAI</option>
+          <option value="custom">Custom API</option>
+        </select>
+      </label>
+      <button id="saveProfile" type="button" style="margin-top:20px" data-t="saveProfile">💾</button>
+      <button id="loadProfile" type="button" style="margin-top:20px" data-t="loadProfile">📂</button>
+    </div>
+    <div id="customFields" style="display:none">
+      <label><span>Request Format</span>
+        <select id="customFormat">
+          <option value="openai">OpenAI-compatible</option>
+          <option value="raw">Raw JSON POST</option>
+        </select>
+      </label>
+      <label id="customBodyRow"><span>Request Body Template</span>
+        <textarea id="customBody" rows="5" placeholder='{"prompt": "${system}\\n${user}", "max_tokens": 4096}'></textarea>
+      </label>
+      <label><span>Response Path</span>
+        <input id="customResponsePath" placeholder="response.text или choices[0].message.content">
+      </label>
+      <label><span>Custom Headers (JSON)</span>
+        <textarea id="customHeaders" rows="3" placeholder='{"X-Custom-Header": "value"}'></textarea>
+      </label>
+    </div>
+    <label id="baseRow"><span data-t="baseUrl"></span><input id="base" value="http://localhost:11434/v1"></label>
+    <label><span data-t="model"></span><input id="model" value="qwen2.5-coder"></label>
+    <label><span data-t="apiKey"></span><input id="key" type="password"></label>
+  </section>
+  <section>
+    <label data-t="migrationQuality"></label>
+    <select id="qualityLevel">
+      <option value="lenient" data-t="qualityLenient"></option>
+      <option value="balanced" data-t="qualityBalanced" selected></option>
+      <option value="strict" data-t="qualityStrict"></option>
+    </select>
+    <label style="display:flex;align-items:center;gap:8px;margin-top:8px">
+      <input id="generateTests" type="checkbox">
+      <span data-t="generateTests"></span>
+    </label>
+    <label style="display:flex;align-items:center;gap:8px">
+      <input id="generateReadme" type="checkbox" checked>
+      <span data-t="generateReadme"></span>
+    </label>
+    <label style="display:flex;align-items:center;gap:8px">
+      <input id="dryRun" type="checkbox">
+      <span data-t="dryRun"></span>
+    </label>
+    <label style="display:flex;align-items:center;gap:8px">
+      <input id="respectGitignore" type="checkbox" checked>
+      <span data-t="respectGitignore"></span>
+    </label>
+  </section>
+  <div style="display:flex;gap:12px">
+    <button id="start" class="primary" data-t="start"></button>
+    <button id="stop" style="display:none" data-t="stop"></button>
+    <button id="exportReport" style="display:none" data-t="exportReport">📊 Export</button>
+  </div>
+  <div id="progress" style="display:none">
+    <div class="progress-bar">
+      <div id="progressFill"></div>
+    </div>
+    <div id="progressText"></div>
+  </div>
+  <pre id="log"></pre>
+</main>
+<dialog id="ask"><form method="dialog">
+  <h3 data-t="question"></h3><p id="q"></p><input id="a" autofocus>
+  <button id="send" data-t="send"></button>
+</form></dialog>
+<dialog id="docDialog"><form method="dialog">
+  <h3 data-t="docTitle"></h3>
+  <textarea id="docText" rows="8"></textarea>
+  <button data-t="docSave"></button>
+</form></dialog>
+<dialog id="setupDialog">
+  <h2 data-t="welcomeTitle"></h2>
+  <p data-t="welcomeText"></p>
+  <section class="grid">
+    <label><span data-t="providerKind"></span>
+      <select id="setupKind">
+        <option value="openaicompatible" data-t="kindOpenai"></option>
+        <option value="anthropic" data-t="kindAnthropic"></option>
+        <option value="llamacpp" data-t="kindLlamaCpp"></option>
+      </select>
+    </label>
+    <label id="setupBaseRow"><span data-t="baseUrl"></span><input id="setupBase" value="http://localhost:11434/v1"></label>
+    <label><span data-t="model"></span><input id="setupModel" value="qwen2.5-coder"></label>
+    <label><span data-t="apiKey"></span><input id="setupKey" type="password"></label>
+  </section>
+  <button id="setupSave" class="primary" data-t="setupSave"></button>
+</dialog>
+<dialog id="settingsDialog">
+  <h2>Настройки</h2>
+  <section class="grid">
+    <label><span>Количество потоков</span>
+      <input id="threadCount" type="number" min="1" max="16" value="4">
+    </label>
+    <label>
+      <input id="darkTheme" type="checkbox"> Темная тема
+    </label>
+    <label><span data-t="webhookUrl"></span>
+      <input id="webhookUrl" type="url" placeholder="https://hooks.example.com/migration">
+    </label>
+  </section>
+  <button id="settingsSave" class="primary">Сохранить</button>
+</dialog>
+<dialog id="exportDialog">
+  <h2 data-t="exportTitle"></h2>
+  <p data-t="exportText"></p>
+  <div style="display:flex;gap:12px;margin-top:16px">
+    <button id="exportJSON" class="primary">📄 JSON</button>
+    <button id="exportCSV">📊 CSV</button>
+    <button id="exportMarkdown">📝 Markdown</button>
+  </div>
+  <button id="exportClose" style="margin-top:16px" data-t="profileClose">Закрыть</button>
+</dialog>
+<dialog id="profileDialog">
+  <h2 data-t="profileDialogTitle"></h2>
+  <div id="profileList" style="display:grid;gap:8px;margin-bottom:16px"></div>
+  <button id="profileClose" data-t="profileClose"></button>
+</dialog>
+<dialog id="saveProfileDialog">
+  <h2 data-t="saveProfileTitle"></h2>
+  <label><span data-t="profileName"></span>
+    <input id="profileNameInput" placeholder="My OpenAI Config">
+  </label>
+  <div style="display:flex;gap:8px;margin-top:16px">
+    <button id="profileSaveBtn" class="primary" data-t="profileSave"></button>
+    <button id="profileCancelBtn" data-t="profileCancel"></button>
+  </div>
+</dialog>
+<dialog id="historyDialog">
+  <h2 data-t="historyTitle"></h2>
+  <div id="historyList" style="max-height:400px;overflow-y:auto;margin-bottom:16px"></div>
+  <button id="historyClose" data-t="profileClose"></button>
+</dialog>
+<dialog id="diffDialog" style="max-width:90vw;max-height:90vh">
+  <h2 data-t="diffTitle"></h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div>
+      <h3>Python</h3>
+      <pre id="pythonCode" style="max-height:60vh;overflow:auto;background:var(--bg);padding:12px;border-radius:6px;font-size:13px"></pre>
+    </div>
+    <div>
+      <h3>Rust</h3>
+      <pre id="rustCode" style="max-height:60vh;overflow:auto;background:var(--bg);padding:12px;border-radius:6px;font-size:13px"></pre>
+    </div>
+  </div>
+  <button id="diffClose" data-t="profileClose"></button>
+</dialog>
+<script src="app.js"></script>
+</body></html>

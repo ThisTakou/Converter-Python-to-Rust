@@ -1,0 +1,129 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      release_id: ${{ steps.create_release.outputs.id }}
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+  build-release:
+    name: Build Release - ${{ matrix.platform }}
+    needs: create-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            artifact_name: py2rs
+            asset_name: py2rs-linux-x86_64
+          - platform: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: py2rs.exe
+            asset_name: py2rs-windows-x86_64.exe
+          - platform: macos-latest
+            target: x86_64-apple-darwin
+            artifact_name: py2rs
+            asset_name: py2rs-macos-x86_64
+          - platform: macos-latest
+            target: aarch64-apple-darwin
+            artifact_name: py2rs
+            asset_name: py2rs-macos-aarch64
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install system dependencies (Ubuntu)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            py2rs/src-tauri/target/
+          key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install dependencies
+        working-directory: py2rs
+        run: npm install
+
+      - name: Build
+        working-directory: py2rs
+        run: npm run tauri build -- --target ${{ matrix.target }}
+
+      - name: Find artifact (Unix)
+        if: matrix.platform != 'windows-latest'
+        id: find_artifact_unix
+        run: |
+          if [ "${{ matrix.platform }}" == "ubuntu-22.04" ]; then
+            ARTIFACT_PATH=$(find py2rs/src-tauri/target/${{ matrix.target }}/release/bundle/appimage -name "*.AppImage" | head -n 1)
+          else
+            ARTIFACT_PATH=$(find py2rs/src-tauri/target/${{ matrix.target }}/release/bundle/dmg -name "*.dmg" | head -n 1)
+          fi
+          echo "artifact_path=$ARTIFACT_PATH" >> $GITHUB_OUTPUT
+
+      - name: Find artifact (Windows)
+        if: matrix.platform == 'windows-latest'
+        id: find_artifact_windows
+        shell: pwsh
+        run: |
+          $ARTIFACT_PATH = Get-ChildItem -Path "py2rs\src-tauri\target\${{ matrix.target }}\release\bundle\msi" -Filter "*.msi" | Select-Object -First 1 -ExpandProperty FullName
+          echo "artifact_path=$ARTIFACT_PATH" >> $env:GITHUB_OUTPUT
+
+      - name: Upload Release Asset (Unix)
+        if: matrix.platform != 'windows-latest'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ${{ steps.find_artifact_unix.outputs.artifact_path }}
+          asset_name: ${{ matrix.asset_name }}${{ matrix.platform == 'ubuntu-22.04' && '.AppImage' || '.dmg' }}
+          asset_content_type: application/octet-stream
+
+      - name: Upload Release Asset (Windows)
+        if: matrix.platform == 'windows-latest'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ${{ steps.find_artifact_windows.outputs.artifact_path }}
+          asset_name: ${{ matrix.asset_name }}.msi
+          asset_content_type: application/octet-stream

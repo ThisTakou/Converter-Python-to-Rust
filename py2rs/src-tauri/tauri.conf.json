@@ -1,0 +1,12 @@
+{
+  "productName": "py2rs",
+  "version": "0.1.0",
+  "identifier": "dev.py2rs.app",
+  "build": { "frontendDist": "../ui" },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [{ "title": "py2rs", "width": 980, "height": 760 }],
+    "security": { "csp": null }
+  },
+  "bundle": { "active": true, "targets": "all" }
+}

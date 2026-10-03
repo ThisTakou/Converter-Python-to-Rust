@@ -1,0 +1,44 @@
+:root{--bg:#eef1f4;--ink:#1b2430;--line:#c9d1da;--accent:#b7410e}
+body.dark{--bg:#141a21;--ink:#e6ebf0;--line:#2c3743}
+@media(prefers-color-scheme:dark){:root{--bg:#141a21;--ink:#e6ebf0;--line:#2c3743}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:24px}
+header{display:flex;justify-content:space-between;align-items:center}
+section{margin:20px 0}.grid{display:grid;gap:12px}
+label{display:block;font-weight:600}
+input,textarea,select{width:100%;box-sizing:border-box;padding:8px;margin-top:4px;background:transparent;color:inherit;border:1px solid var(--line);border-radius:6px;font:inherit}
+button{padding:8px 14px;border:1px solid var(--line);border-radius:6px;background:transparent;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent)}
+button:disabled{opacity:0.5;cursor:not-allowed}
+.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+pre{white-space:pre-wrap;border:1px solid var(--line);border-radius:6px;padding:12px;min-height:120px}
+dialog{border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);max-width:480px}
+
+.crates{display:grid;gap:6px}
+.crate-row{display:grid;grid-template-columns:140px 1fr auto;gap:8px;align-items:center;font-weight:400}
+.crate-row span{font-family:monospace}
+.crate-row button{font-size:16px;line-height:1;padding:6px 10px}
+#docDialog{max-width:640px;width:90vw}
+#docDialog textarea{font-family:ui-monospace,monospace;resize:vertical}
+
+#progress{margin:16px 0}
+.progress-bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:8px}
+#progressFill{height:100%;background:var(--accent);transition:width 0.3s ease}
+#progressText{font-size:14px;color:var(--ink);opacity:0.8}
+
+#setupDialog{max-width:560px;width:90vw;padding:24px}
+#setupDialog h2{margin:0 0 12px 0}
+#setupDialog p{margin:0 0 20px 0;opacity:0.8}
+#setupDialog .grid{margin-bottom:20px}
+#setupDialog button{width:100%;margin-top:12px}
+
+#settingsDialog{max-width:480px;width:90vw;padding:24px}
+#settingsDialog h2{margin:0 0 20px 0}
+#settingsDialog .grid{margin-bottom:20px}
+#settingsDialog button{width:100%;margin-top:12px}
+#settingsBtn{font-size:18px;line-height:1;padding:8px 12px}
+#historyBtn{font-size:18px;line-height:1;padding:8px 12px}
+#stop{background:transparent;border-color:var(--line);color:var(--ink)}
+#fileListContainer label{cursor:pointer;user-select:none}
+#fileListContainer label:hover{background:var(--line);border-radius:4px;padding-left:4px}
+#fileListContainer input[type=checkbox]{margin-right:8px}

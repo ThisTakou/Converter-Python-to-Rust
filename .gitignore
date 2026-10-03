@@ -1,0 +1,33 @@
+# Tauri
+py2rs/src-tauri/target/
+py2rs/src-tauri/WixTools/
+
+# Node
+py2rs/node_modules/
+py2rs/package-lock.json
+
+# Python
+*.pyc
+__pycache__/
+venv/
+.venv/
+
+# Generated outputs
+*_rs/
+*.py2rs_cache
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
